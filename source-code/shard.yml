@@ -1,1 +1,12 @@
+name: yaml
+version: 0.1.0
 
+authors:
+  - Bytes Developers <hackeros068@gmail.com>
+
+description: |
+  A simple YAML handler for Hacker Lang, providing pretty print and value extraction.
+
+dependencies: {}  # No external dependencies
+
+license: MIT
