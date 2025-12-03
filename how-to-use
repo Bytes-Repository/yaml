@@ -1,1 +1,87 @@
+### Jak używać biblioteki **yaml** w Hacker Lang (w kodzie .hacker)
 
+Biblioteka `yaml` (napisana w Crystal) to samodzielny, skompilowany plik binarny, który możesz wywoływać z Hacker Lang dokładnie tak, jak każdy inny program w systemie. Obsługuje formatowanie YAML (pretty) oraz wyciąganie wartości po ścieżce (get).
+
+#### 1. Zainstaluj bibiloteke (jednorazowo)
+
+```bash
+bytes install yaml
+```
+
+#### 2. Użycie w pliku `.hacker`
+
+```hacker
+// yaml        ! dodaj jako zależność systemową (opcjonalne, tylko informacja)
+# yaml
+
+@YAML_FILE=data.yaml
+@OUTPUT=/tmp/result.yaml
+
+! Przykład 1: Wypisz ładnie sformatowany YAML
+> yaml pretty data.yaml
+
+! Przykład 2: Wypisz ładnie YAML z pliku przez zmienną
+> yaml pretty $YAML_FILE
+
+! Przykład 3: Wczytaj YAML z stdin (np. z innego polecenia)
+> curl -s https://example.com/data.yaml | yaml pretty
+
+! Przykład 4: Pobierz konkretną wartość (ścieżka w stylu .key.subkey[0])
+> yaml get .name data.yaml
+> yaml get .owner.login data.yaml
+> yaml get .items[0].name config.yaml
+
+! Przykład 5: Zapisz wynik do pliku (przekierowanie)
+> yaml pretty data.yaml > $OUTPUT
+> cat $OUTPUT
+
+! Przykład 6: Użyj w zmiennej (z backticks w Hacker Lang – jeśli masz wersję z obsługą)
+>> RESULT=$(yaml get .version bytes.yaml)
+>> echo "Wersja projektu: $RESULT"
+
+! Przykład 7: Sprawdź czy klucz istnieje i reaguj
+? yaml get .tasks.build bytes.yaml | grep -q "crystal" > echo "Budowanie jest skonfigurowane!"
+
+! Przykład 8: Pobierz tablicę i przetwórz każdy element (w pętli)
+=5 > echo "Element $I: $(yaml get .items[$I].name data.yaml)"
+```
+
+#### 3. Najczęściej używane ścieżki (przykłady)
+
+| Co chcesz wyciągnąć            | Ścieżka do yaml get                         |
+|--------------------------------|---------------------------------------------|
+| Najwyższy klucz                | `.nazwa_klucza`                             |
+| Zagnieżdżony klucz             | `.klucz.podsłowny`                          |
+| Element tablicy                | `.nazwa[0]`, `.items[5]`                    |
+| Zagnieżdżony + tablica         | `.owner.tasks[0].name`                      |
+| Cały obiekt jako YAML          | `.` (kropka)                                |
+
+#### 4. Gotowy przykładowy plik `yaml_demo.hacker`
+
+```hacker
+// yaml
+
+@FILE=bytes.yaml
+
+> echo "=== Zawartość bytes.yaml (pretty) ==="
+> yaml pretty $FILE
+
+> echo -e "\n=== Nazwa projektu ==="
+> yaml get .package.name $FILE
+
+> echo -e "\n=== Wersja ==="
+> yaml get .package.version $FILE
+
+> echo -e "\n=== Wszystkie zależności ==="
+> yaml get .dependencies $FILE | yaml pretty
+
+> echo -e "\n=== Pierwsza zależność (nazwa) ==="
+> yaml get '.dependencies | keys[0]' $FILE
+```
+
+#### 5. Bonus: Użycie z `curl` (API)
+
+```hacker
+> curl -s https://example.com/config.yaml | yaml get .api.key > api_key.txt
+> echo "Klucz API: $(cat api_key.txt)"
+```
