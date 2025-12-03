@@ -1,3 +1,5 @@
+require "yaml"
+
 def pretty_print_yaml(value : YAML::Any, indent = 0) : String
   case raw = value.raw
   when Nil
@@ -27,17 +29,18 @@ def pretty_print_yaml(value : YAML::Any, indent = 0) : String
       output.chomp
     end
   when Hash
-    h = raw.as(Hash(String, YAML::Any))
+    h = raw.as(Hash(YAML::Any, YAML::Any))
     if h.empty?
       "{}"
     else
       output = ""
       h.each do |k, v|
+        k_str = k.as_s
         v_str = pretty_print_yaml(v, indent + 1)
         if v_str.starts_with?("-")
-          output += "  " * indent + "#{k}:\n#{v_str}\n"
+          output += "  " * indent + "#{k_str}:\n#{v_str}\n"
         else
-          output += "  " * indent + "#{k}: #{v_str}\n"
+          output += "  " * indent + "#{k_str}: #{v_str}\n"
         end
       end
       output.chomp
@@ -59,7 +62,7 @@ def get_value(current : YAML::Any, path : String) : YAML::Any
       end
       if !key.empty?
         if current.raw.is_a?(Hash)
-          current = current[key]? || YAML::Any.new(nil)
+          current = current.as_h[YAML::Any.new(key)]? || YAML::Any.new(nil)
         else
           return YAML::Any.new(nil)
         end
@@ -75,7 +78,7 @@ def get_value(current : YAML::Any, path : String) : YAML::Any
       end
     else
       if current.raw.is_a?(Hash)
-        current = current[part]? || YAML::Any.new(nil)
+        current = current.as_h[YAML::Any.new(part)]? || YAML::Any.new(nil)
       else
         return YAML::Any.new(nil)
       end
